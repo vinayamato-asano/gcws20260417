@@ -1,15 +1,26 @@
-let timer;
-let timeLeft = 25 * 60;
-let isRunning = false;
+var timer;
+var timeLeft = TOTAL_TIME;
+var isRunning = false;
+var completedCount = 0;
+var focusMinutes = 0;
 
-const display = document.getElementById('timer-display');
-const startBtn = document.getElementById('start-btn');
-const resetBtn = document.getElementById('reset-btn');
+var display = document.getElementById('timer-display');
+var startBtn = document.getElementById('start-btn');
+var resetBtn = document.getElementById('reset-btn');
+var statusLabel = document.getElementById('status-label');
+var progressBar = document.getElementById('progress-bar');
+var completeCountEl = document.getElementById('complete-count');
+var focusTimeEl = document.getElementById('focus-time');
+
+progressBar.style.strokeDasharray = CIRCUMFERENCE;
 
 function updateDisplay() {
-    const min = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const sec = String(timeLeft % 60).padStart(2, '0');
-    display.textContent = `${min}:${sec}`;
+    display.textContent = formatTime(timeLeft);
+    progressBar.style.strokeDashoffset = calcDashOffset(timeLeft, TOTAL_TIME);
+    statusLabel.textContent = getStatusLabel(isRunning, timeLeft);
+    startBtn.textContent = isRunning ? '一時停止' : '開始';
+    if (completeCountEl) completeCountEl.textContent = completedCount;
+    if (focusTimeEl) focusTimeEl.textContent = formatFocusTime(focusMinutes);
 }
 
 function tick() {
@@ -19,20 +30,28 @@ function tick() {
     } else {
         clearInterval(timer);
         isRunning = false;
-        alert('ポモドーロ終了！休憩しましょう。');
+        completedCount++;
+        focusMinutes += Math.round(TOTAL_TIME / 60);
+        updateDisplay();
     }
 }
 
-startBtn.addEventListener('click', () => {
-    if (!isRunning) {
-        timer = setInterval(tick, 1000);
-        isRunning = true;
+startBtn.addEventListener('click', function() {
+    if (isRunning) {
+        clearInterval(timer);
+        isRunning = false;
+    } else {
+        if (timeLeft > 0) {
+            timer = setInterval(tick, 1000);
+            isRunning = true;
+        }
     }
+    updateDisplay();
 });
 
-resetBtn.addEventListener('click', () => {
+resetBtn.addEventListener('click', function() {
     clearInterval(timer);
-    timeLeft = 25 * 60;
+    timeLeft = TOTAL_TIME;
     isRunning = false;
     updateDisplay();
 });
